@@ -1,0 +1,55 @@
+<ion-app>
+<div class="museum" [class.exhibition-mode]="page!==0||catalog">
+@if(page!==0||catalog){<header><a class="brand" href="#" (click)="$event.preventDefault();navigate(0)">MUSEUM <span>X</span><small>BLACK EDITION</small></a><button class="catalog-button" (click)="catalog=!catalog" [attr.aria-expanded]="catalog">{{catalog?'Cerrar ✕':'Colección ▦'}}</button></header>}
+<main [class.cover-main]="page===0&&!catalog" (touchstart)="touchX=$event.touches[0].clientX;touchY=$event.touches[0].clientY" (touchend)="swipe($event)">
+@if(catalog){
+<section class="catalog"><p class="eyebrow">OCHO SALAS · INFINITAS POSIBILIDADES</p><h1>Tu colección.</h1><div class="catalog-grid">@for(title of titles;track $index){<button (click)="navigate($index);catalog=false"><span>0{{$index+1}}</span><strong>{{title}}</strong><span>↗</span></button>}</div></section>
+}@else{
+<section class="room" [class.home-room]="page===0" [attr.data-room]="page">
+@if(page!==0){<div class="room-heading"><p class="eyebrow">SALA 0{{page+1}} / 08</p><h1>{{page===4?'Santo Domingo':page===5?'Pokémon':titles[page]}}</h1>@if(page===4){<button class="weather-refresh" type="button" (click)="weather()" [disabled]="busy" aria-label="Actualizar clima">↻</button>}</div>}
+@switch(page){
+@case(0){
+<div class="collection-cover" aria-labelledby="cover-title">
+  <img class="cover-art" src="assets/museum-gallery-v2.png" alt="Caja de herramientas negra y dorada expuesta sobre un pedestal circular de mármol en una galería de museo" fetchpriority="high" decoding="async">
+  <div class="cover-heading">
+    <p class="cover-brand">MUSEUM X</p><span class="cover-rule" aria-hidden="true"></span>
+    <h1 id="cover-title">El arte de<br>descubrir.</h1>
+    <p class="cover-subtitle">Ocho salas. Un universo de posibilidades.</p>
+  </div>
+  <div class="cover-actions">
+    <p class="cover-edition">LA COLECCIÓN <span aria-hidden="true">·</span> 08 EXPERIENCIAS</p>
+    <button type="button" class="cover-enter" (click)="navigate(1)">Comenzar recorrido</button>
+    <button type="button" class="cover-collection" (click)="catalog=true">Explorar la colección</button>
+  </div>
+</div>
+}
+@case(1){
+<form class="exhibit-search" (ngSubmit)="gender()"><label class="sr-only" for="name">Nombre para consultar</label><div class="input-row glass-field"><input id="name" name="name" [(ngModel)]="name" placeholder="Escribe un nombre" maxlength="80" autocomplete="given-name"><button class="primary search-submit" [disabled]="busy" aria-label="Explorar nombre">→</button></div></form>
+@if(data){<article class="result identity" [class.masculine]="data.gender==='male'" [class.feminine]="data.gender==='female'">
+<div class="exhibit-stage"><span class="result-symbol" aria-hidden="true">{{data.gender==='male'?'♂':data.gender==='female'?'♀':'○'}}</span></div>
+<h2>{{data.name}}</h2><p class="identity-prediction">{{data.gender==='male'?'Masculino':data.gender==='female'?'Femenino':'Sin resultado'}}@if(data.gender){ · {{data.probability | percent}}}</p>
+<details class="exhibit-info"><summary aria-label="Información sobre la predicción"><span aria-hidden="true">ⓘ</span><span class="sr-only">Sobre la predicción</span></summary><div class="info-panel">Estimación estadística de Genderize; no determina la identidad de una persona.@if(data.gender){<p>{{data.count | number}} registros · {{data.probability | percent}} de probabilidad.</p>}</div></details>
+</article>}@else if(!busy&&!error){<div class="empty-exhibit"><span aria-hidden="true">○</span><p>Un nombre, una nueva perspectiva.</p></div>}
+}
+@case(2){<button class="primary" (click)="person()" [disabled]="busy">Descubrir una persona ↗</button>@if(data){<article class="result person"><img [src]="data.picture.large" alt="Retrato de la persona ficticia generada"><p class="eyebrow">UNA HISTORIA AL AZAR</p><h2>{{data.name.first}} {{data.name.last}}</h2><dl><div><dt>Nacimiento</dt><dd>{{data.dob.date | date:'dd/MM/yyyy':'UTC'}}</dd></div><div><dt>Edad</dt><dd>{{data.dob.age}} años</dd></div></dl><small>Datos ficticios generados por RandomUser.</small></article>}}
+@case(3){<form (ngSubmit)="universities()"><label for="country">País en inglés</label><div class="input-row"><input id="country" name="country" [(ngModel)]="country" placeholder="Dominican Republic" maxlength="100"><button class="primary" [disabled]="busy">Buscar</button></div></form>@if(data){<p class="caption">{{data.length}} universidades encontradas</p><div class="results">@for(u of data;track $index){<article class="card"><h2>{{u.name}}</h2><p>{{u.domains?.join(', ')}}</p>@for(link of u.web_pages;track $index){@if(safe(link)){<a [href]="safe(link)" target="_blank" rel="noopener noreferrer">Visitar universidad ↗</a>}}</article>}@empty{<p>No se encontraron universidades. Revisa el nombre del país en inglés.</p>}</div>}}
+@case(4){
+<div class="sky-art"><img src="assets/serene-sky.png" alt="" role="presentation"><span>Estudio del cielo · ilustración</span></div>
+@if(data){<article class="result weather"><div class="temperature">{{data.temperature_2m | number:'1.0-0'}}<span>°</span></div><p class="weather-condition">{{weatherLabel(data.weather_code)}}</p><dl class="weather-tray glass-panel"><div><dt>Sensación</dt><dd>{{data.apparent_temperature | number:'1.0-0'}}°</dd></div><div><dt>Humedad</dt><dd>{{data.relative_humidity_2m}}%</dd></div><div><dt>Viento</dt><dd>{{data.wind_speed_10m | number:'1.0-0'}}<small> km/h</small></dd></div></dl>
+<details class="exhibit-info weather-info"><summary>Open-Meteo · {{data.time.slice(11)}} <span aria-hidden="true">ⓘ</span></summary><div class="info-panel">Santo Domingo, República Dominicana · °C.<p>Hora local: {{data.time.replace('T',' · ')}}. Precipitación: {{data.precipitation}} mm.</p><p>Datos modelados de <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. La imagen es una ilustración ambiental, no una cámara en vivo.</p></div></details></article>}
+}
+@case(5){
+<form class="exhibit-search" (ngSubmit)="poke()"><label class="sr-only" for="pokemon">Nombre o número Pokémon</label><div class="input-row glass-field"><input id="pokemon" name="pokemon" [(ngModel)]="pokemon" placeholder="Nombre o número" maxlength="80" autocapitalize="none" spellcheck="false"><button class="primary search-submit" [disabled]="busy" aria-label="Buscar Pokémon">→</button></div></form>
+@if(data){<article class="result pokemon"><div class="exhibit-stage pokemon-stage">@if(data.sprites.other?.['official-artwork']?.front_default||data.sprites.front_default){<img [src]="data.sprites.other?.['official-artwork']?.front_default||data.sprites.front_default" [alt]="data.name">}@else{<span class="image-unavailable">Imagen no disponible</span>}</div><h2>{{data.name}}</h2><p class="specimen-id">#{{data.id.toString().padStart(3,'0')}}</p><div class="pokemon-tray glass-panel"><div class="experience"><span>Experiencia</span><strong>{{data.base_experience ?? '—'}}</strong></div><div class="tags" aria-label="Habilidades">@for(a of data.abilities;track a.ability.name){<span>{{a.ability.name}}@if(a.is_hidden){<small> · oculta</small>}</span>}</div></div><button class="audio-play" type="button" (click)="play()" [disabled]="!data.cries?.latest" aria-label="Escuchar sonido del Pokémon"><span aria-hidden="true">▶</span><small>Escuchar</small></button>@if(!data.cries?.latest){<p class="caption">Sin sonido disponible.</p>}</article>}@else if(!busy&&!error){<div class="empty-exhibit"><span aria-hidden="true">◉</span><p>Descubre una nueva especie.</p></div>}
+}
+@case(6){<form (ngSubmit)="wordpress()"><label for="wp">Sitio WordPress</label><div class="input-row"><input id="wp" name="wp" type="url" [(ngModel)]="wp" placeholder="https://tu-sitio.com"><button class="primary" [disabled]="busy">Cargar</button></div></form>@if(data){<div class="wp-heading">@if(wpLogo){<img [src]="wpLogo" alt="Logo del sitio WordPress">}<h2>{{wpTitle}}</h2></div><div class="results">@for(post of data;track post.id){<article class="card"><p class="eyebrow">{{post.date | date:'dd MMM yyyy'}}</p><h2>{{text(post.title.rendered)}}</h2><details class="post-excerpt"><summary>Ver resumen</summary><p>{{text(post.excerpt.rendered)}}</p></details>@if(safe(post.link)){<a [href]="safe(post.link)" target="_blank" rel="noopener noreferrer">Leer artículo original ↗</a>}</article>}@empty{<p>Este sitio no tiene entradas públicas.</p>}</div>}}
+@case(7){<article class="result profile">@if(profile.photo){<img [src]="profile.photo" alt="Fotografía de la autora">}@else{<div class="photo-pending">FOTOGRAFÍA<br>PENDIENTE</div>}<p class="eyebrow">CREACIÓN Y CURIOSIDAD</p><h2>{{profile.firstName}} {{profile.lastName}}</h2><p>Matrícula {{profile.studentId}}</p><a [href]="'mailto:'+profile.email">{{profile.email}}</a><a [href]="'tel:'+profile.phone">{{profile.phone}}</a><p class="caption">Tarea 6 · MUSEUM X — Black Edition</p></article>}
+}
+@if(busy){<div class="status" role="status"><span class="spinner"></span> Consultando la colección…</div>}
+@if(error){<div class="error" role="alert">{{error}}</div>}
+@if(note){<div class="status" role="status">{{note}}</div>}
+</section>}
+</main>
+@if(page!==0&&!catalog){<footer><button class="nav-arrow" (click)="navigate(page-1)" [disabled]="page===0" aria-label="Sala anterior">←</button><div class="dots">@for(t of titles;track $index){<button [class.active]="page===$index" [attr.aria-label]="'Ir a '+t" [attr.aria-current]="page===$index?'step':null" (click)="navigate($index)"></button>}</div><button class="nav-arrow" (click)="navigate(page+1)" [disabled]="page===7" aria-label="Sala siguiente">→</button></footer>}
+</div>
+</ion-app>

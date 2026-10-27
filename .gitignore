@@ -1,0 +1,16 @@
+node_modules/
+www/
+.angular/
+android/.gradle/
+android/local.properties
+android/**/build/
+*.jks
+*.keystore
+.DS_Store
+
+# Entorno y credenciales locales
+.env
+.env.*
+!.env.example
+*.pem
+*.p12

@@ -1,0 +1,33 @@
+import {readFile,mkdtemp,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+const temp=await mkdtemp(join(tmpdir(),'museum-x-gender-'));
+try{
+const source=await readFile(new URL('../src/app/genderize-client.ts',import.meta.url),'utf8');
+const modulePath=join(temp,'client.mjs');await writeFile(modulePath,ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText);
+const {GenderizeClient,GenderizeLimitError}=await import(pathToFileURL(modulePath));
+const storage=()=>{const map=new Map();return {getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v)}};
+const prediction={name:'Alex',gender:'male',probability:.95,count:100};
+let now=Date.parse('2026-10-27T04:00:00Z'),calls=0;const saved=storage();
+const request=async()=>{calls++;return {status:200,data:prediction,headers:{}}};
+let client=new GenderizeClient(request,saved,()=>now);
+assert.equal((await client.lookup('Alex')).cached,false);assert.equal((await client.lookup(' ALEX ')).cached,true);assert.equal(calls,1);
+client=new GenderizeClient(request,saved,()=>now);assert.equal((await client.lookup('alex')).cached,true);assert.equal(calls,1);
+now+=8*86400000;assert.equal((await client.lookup('Alex')).cached,false);assert.equal(calls,2);
+let limitCalls=0;const quotaStore=storage();
+const quota=async()=>{limitCalls++;return {status:429,data:{error:'Request limit reached'},headers:{'X-Rate-Limit-Remaining':'0','X-Rate-Limit-Reset':'3600'}}};
+client=new GenderizeClient(quota,quotaStore,()=>now);await assert.rejects(client.lookup('new'),e=>e instanceof GenderizeLimitError&&e.knownReset&&e.resetAt===now+3600000);
+await assert.rejects(client.lookup('new'));assert.equal(limitCalls,1);
+client=new GenderizeClient(quota,quotaStore,()=>now);await assert.rejects(client.lookup('another'));assert.equal(limitCalls,1);
+now+=3600001;await assert.rejects(client.lookup('another'));assert.equal(limitCalls,2);
+let last=0;const store=storage();client=new GenderizeClient(async()=>{last++;return {status:200,data:prediction,headers:{'x-rate-limit-remaining':'0','x-rate-limit-reset':'300'}}},store,()=>now);
+await client.lookup('Alex');assert.equal((await client.lookup('alex')).cached,true);await assert.rejects(client.lookup('Maria'));assert.equal(last,1);
+client=new GenderizeClient(async()=>({status:429,data:{error:'Request limit reached'},headers:{}}),undefined,()=>now);await assert.rejects(client.lookup('Alex'),e=>e instanceof GenderizeLimitError&&!e.knownReset&&e.resetAt===now+60000);
+const broken={getItem(){throw Error('unavailable')},setItem(){throw Error('unavailable')}};
+client=new GenderizeClient(request,broken,()=>now);assert.equal((await client.lookup('Alex')).prediction.name,'Alex');
+client=new GenderizeClient(async()=>({status:200,data:{...prediction,gender:'unknown'},headers:{}}));await assert.rejects(client.lookup('Alex'),/inválida/);
+console.log('PASS: cache normalizada y persistente, caducidad, cuota persistente, renovación, última consulta válida, espera sin cabecera, almacenamiento no disponible y respuesta inválida. Sin peticiones reales.');
+}finally{await rm(temp,{recursive:true,force:true});}
