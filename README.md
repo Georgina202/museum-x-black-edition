@@ -4,6 +4,14 @@ Repositorio: [Georgina202/museum-x-black-edition](https://github.com/Georgina202
 
 Aplicación Android de Tarea 6 desarrollada por Georgina Rivas con Ionic Angular standalone, TypeScript, SCSS y Capacitor. Museo digital con ocho herramientas, navegación horizontal y catálogo directo.
 
+## Descargar para Android
+
+[Descargar APK v1.0.0](https://github.com/Georgina202/museum-x-black-edition/releases/download/v1.0.0/MUSEUM-X-Black-Edition-v1.0.0.apk) · [Ver publicación](https://github.com/Georgina202/museum-x-black-edition/releases/tag/v1.0.0)
+
+APK instalable de pruebas, firmado con clave debug. Escanea este QR desde el teléfono para descargarlo:
+
+![QR de descarga del APK](docs/qr-apk.png)
+
 ## Ejecutar
 
 Requisitos verificados: Node 24.21.0, npm 11.19.0, Java 21.0.11, Android SDK 36. Gradle wrapper incluido (8.14.3). El SDK local se configura en `android/local.properties`, que no se publica.
@@ -67,3 +75,12 @@ La cuota de Genderize pertenece al servicio externo. Una respuesta HTTP 429 no e
 Las respuestas válidas se conservan localmente durante siete días (hasta 150 nombres), identificadas como guardadas; repetir un nombre ignora mayúsculas y espacios duplicados y no gasta otra consulta. No se almacenan errores ni predicciones ficticias. Esto no recupera la cuota ya consumida y los nombres no guardados requieren cuota disponible.
 
 Prueba aislada sin red: `node scripts/test-genderize.mjs`. Para ampliar cuota se requiere una autorización propia del proveedor; no se incluye ninguna clave en el APK.
+
+## Generar el QR con Python
+
+El QR se genera localmente, en negro sobre blanco con margen de seguridad y salida PNG a 300 ppp. No depende de un servicio de QR externo. Se verificó su lectura con un decodificador independiente.
+
+```sh
+python3 -m pip install -r scripts/requirements-qr.txt
+python3 scripts/generate_apk_qr.py --url "https://github.com/Georgina202/museum-x-black-edition/releases/download/v1.0.0/MUSEUM-X-Black-Edition-v1.0.0.apk" --output qr-apk.png
+```

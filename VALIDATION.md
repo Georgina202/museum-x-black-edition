@@ -32,3 +32,5 @@ Revisión del enunciado: ocho vistas implementadas. Seis APIs comprobadas otra v
 27 octubre 2026 - Genderize HTTP 429 real: límite 10, restantes 0, reinicio indicado por cabecera. Corregido manejo de cuota, persistencia de espera y caché normalizada de respuestas válidas (7 días / 150 nombres). Pruebas aisladas de caché, caducidad, renovación, última consulta, almacenamiento no disponible y respuesta inválida correctas. Angular y Gradle correctos. Sin emulador.
 
 27 octubre 2026 - La autora confirmó la validación funcional en su teléfono. Foro excluido por indicación expresa. Publicación del repositorio público con fotografía y contacto autorizada por la autora. PDF a cargo de la autora.
+
+27 octubre 2026 - APK v1.0.0 publicado en GitHub Releases. QR generado con Python (qrcode) y verificado con lector independiente zxing-cpp; la lectura coincide exactamente con el enlace directo del APK.
