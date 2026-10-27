@@ -1,5 +1,7 @@
 # MUSEUM X — Black Edition
 
+Repositorio: [Georgina202/museum-x-black-edition](https://github.com/Georgina202/museum-x-black-edition)
+
 Aplicación Android de Tarea 6 desarrollada por Georgina Rivas con Ionic Angular standalone, TypeScript, SCSS y Capacitor. Museo digital con ocho herramientas, navegación horizontal y catálogo directo.
 
 ## Ejecutar
